@@ -23,6 +23,7 @@ def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
             for network in container['networkBindings']:
                 labels['containerPort'] = "%s" % network['containerPort']
                 ecsInst = ecsIdToinstancePrivateIp[task['containerInstanceArn']]
+                labels['host'] = ecsInst['instance_id']
                 target = "%s:%s" % (ecsInst['private_ip_address'], network['hostPort'])
                 services.append({
                     'targets': [target],
