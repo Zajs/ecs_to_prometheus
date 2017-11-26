@@ -8,7 +8,7 @@ import os
 import logging
 import json
 from time import sleep
-
+import traceback
 
 def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
     # append
@@ -31,6 +31,7 @@ def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
                 })
 
     # save json
+    print("Saving services =%s" % (services))
     directory = os.environ.get("PATH_TO_SAVE")
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -40,10 +41,11 @@ def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
 
 def get_for_cluster(ecscli, ec2cli, cluster):
     res = ecscli.list_container_instances(cluster=cluster)
+
     container_instances = res['ListContainerInstancesResponse']['ListContainerInstancesResult']['containerInstanceArns']
-    container_instances_desc = \
-    ecscli.describe_container_instances(container_instances, cluster)['DescribeContainerInstancesResponse'][
-        'DescribeContainerInstancesResult']['containerInstances']
+    print("cluster=%s, container_instances=%s" % (cluster, container_instances))
+
+    container_instances_desc = ecscli.describe_container_instances(container_instances, cluster)['DescribeContainerInstancesResponse']['DescribeContainerInstancesResult']['containerInstances']
 
     instanceIdToEcsId = {}
     ecsIdToinstancePrivateIp = {}
@@ -68,8 +70,10 @@ def scrap(aws_region, clusters):
 
     try:
         for val in clusters:
+            print("Starting scrap for cluster=%s" % (val))
             get_for_cluster(ecscli, ec2cli, val)
     except Exception as ex:
+        traceback.print_exc()
         logging.error("Can't scrape %s, region %s, clusters %s" % ex, aws_region, clusters)
 
 
@@ -83,5 +87,6 @@ if __name__ == "__main__":
         try:
             scrap(aws_region, clusters)
         except Exception as ex:
+            traceback.print_exc()
             logging.error("Can't scrape %s" % ex)
         sleep(60)
