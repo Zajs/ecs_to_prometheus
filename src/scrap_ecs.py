@@ -54,7 +54,7 @@ def get_for_cluster(ecscli, ec2cli, cluster):
         instanceIdToEcsId[val['ec2InstanceId']] = val['containerInstanceArn']
 
     for val in ec2cli.get_all_network_interfaces():
-        if instanceIdToEcsId.has_key(val.attachment.instance_id):
+        if val.attachment is not None and instanceIdToEcsId.has_key(val.attachment.instance_id):
             ecsIdToinstancePrivateIp[instanceIdToEcsId[val.attachment.instance_id]] = {
                 'private_ip_address': val.private_ip_address, 'instance_id': val.attachment.instance_id
             }
@@ -74,7 +74,6 @@ def scrap(aws_region, clusters):
             get_for_cluster(ecscli, ec2cli, val)
     except Exception as ex:
         traceback.print_exc()
-        logging.error("Can't scrape %s, region %s, clusters %s" % ex, aws_region, clusters)
 
 
 if __name__ == "__main__":
