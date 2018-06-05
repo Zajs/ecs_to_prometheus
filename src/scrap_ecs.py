@@ -14,12 +14,13 @@ def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
     # append
     services = []
     for task in tasks:
-        for container in task['containers']:
-            labels = {
-                'container': container['name'],
-                'taskArn': container['taskArn'],
-                'group': task['group']
-            }
+        try:
+            for container in task['containers']:
+                labels = {
+                    'container': container['name'],
+                    'taskArn': container['taskArn'],
+                    'group': task['group']
+                }
             for network in container['networkBindings']:
                 labels['containerPort'] = "%s" % network['containerPort']
                 ecsInst = ecsIdToinstancePrivateIp[task['containerInstanceArn']]
@@ -29,6 +30,8 @@ def save_tasks_for_cluster(tasks, ecsIdToinstancePrivateIp, cluster):
                     'targets': [target],
                     'labels': labels
                 })
+        except Exception as ex:
+            logging.error("Can't scrape with error %s task:" % ex % task)
 
     # save json
     print("Saving services =%s" % (services))
